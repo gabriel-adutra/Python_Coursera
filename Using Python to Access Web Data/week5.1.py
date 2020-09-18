@@ -1,20 +1,22 @@
 
- import urllib
- import json
+import urllib.request, urllib.parse, urllib.error
+import xml.etree.ElementTree as ET
+import ssl
 
- serviceurl = 'http://python-data.dr-chuck.net/geojson?'
+# Ignore SSL certificate errors
+ctx = ssl.create_default_context()
+ctx.check_hostname = False
+ctx.verify_mode = ssl.CERT_NONE
 
- address = raw_input('Enter location: ')
- url = serviceurl + urllib.urlencode({'sensor':'false', 'address': address})
- print 'Retrieving', url
- uh = urllib.urlopen(url)
- data = uh.read()
- print 'Retrieved',len(data),'characters'
- try: js = json.loads(str(data))
- except: js = None
- if 'status' not in js or js['status'] != 'OK':
-   print '==== Failure To Retrieve ===='
-   print data
+url = input('Enter location: ')
+print('Retrieving', url)
+data = urllib.request.urlopen(url, context=ctx).read()
+tree = ET.fromstring(data)
+print('Retrieved', len(data.decode()), 'characters')
 
- placeid = js["results"][0]["place_id"]
- print 'Place ID ', placeid  
+counts = tree.findall('.//count')
+print('Count', len(counts))
+sum = 0
+for count in counts:
+	sum = sum + int(count.text)
+print('Sum:', sum)
